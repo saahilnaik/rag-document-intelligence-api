@@ -99,14 +99,15 @@ Each step must be green (tests pass + manual smoke test) before the next.
 - [x] `tests/conftest.py` with dummy env vars + autouse `_reset_registries`
 - [x] `tests/test_session_memory.py` — eviction + isolation
 
-### Step 3 — Ingestion
-- [ ] `services/document_processor.py` (extract_text + chunk_documents)
-- [ ] `services/vector_store.py` (`VectorStoreManager`, lazy init, metadata filter)
-- [ ] `api/routes.py`: `POST /upload`, `GET /documents`, `GET /documents/{id}`, `DELETE /documents/{id}`
-- [ ] `_ingest_document` BackgroundTask wires extract → chunk → store → mark_ready
-- [ ] `tests/test_document_processor.py` — metadata preservation
-- [ ] `tests/test_routes.py` — upload happy + invalid cases (mocked vector store)
-- [ ] **Smoke**: upload real PDF → status goes `processing` → `ready`
+### Step 3 — Ingestion _(done)_
+
+- [x] `services/document_processor.py` (extract_text + chunk_documents)
+- [x] `services/vector_store.py` (`VectorStoreManager`, lazy init, metadata filter)
+- [x] `api/routes.py`: `POST /upload`, `GET /documents`, `GET /documents/{id}`, `DELETE /documents/{id}`
+- [x] `_ingest_document` BackgroundTask wires extract → chunk → store → mark_ready
+- [x] `tests/test_document_processor.py` — metadata preservation
+- [x] `tests/test_routes.py` — upload happy + invalid cases (mocked vector store)
+- [x] **Smoke**: upload real PDF → status goes `processing` → `ready`
 
 ### Step 4 — QA (non-streaming)
 - [ ] `services/qa.py`: `_ManagerRetriever`, `get_answer`, LCEL chain with `ChatGroq`

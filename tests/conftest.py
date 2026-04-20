@@ -1,12 +1,15 @@
 import os
+import tempfile
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
+
+_tmp = tempfile.gettempdir()
 
 # Set dummy env vars before any app imports so Settings validation passes
 os.environ.setdefault("GROQ_API_KEY", "test-groq-key")
-os.environ.setdefault("CHROMA_PERSIST_DIR", "/tmp/test-chroma")
-os.environ.setdefault("UPLOAD_DIR", "/tmp/test-uploads")
+os.environ.setdefault("CHROMA_PERSIST_DIR", f"{_tmp}/test-chroma")
+os.environ.setdefault("UPLOAD_DIR", f"{_tmp}/test-uploads")
 
 
 @pytest.fixture(autouse=True)
@@ -27,6 +30,7 @@ def mock_vector_store():
     with (
         patch("services.vector_store.vector_store_manager", mock),
         patch("api.routes.vector_store_manager", mock),
+        patch("api.routes._ingest_document"),  # prevent real ingestion in route tests
     ):
         yield mock
 
@@ -45,8 +49,8 @@ def mock_qa():
         yield {"type": "done"}
 
     with (
-        patch("api.routes.get_answer", return_value=canned),
-        patch("api.routes.astream_answer", side_effect=fake_stream),
+        patch("api.routes.get_answer", return_value=canned, create=True),
+        patch("api.routes.astream_answer", side_effect=fake_stream, create=True),
     ):
         yield
 
