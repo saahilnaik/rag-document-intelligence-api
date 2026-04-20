@@ -82,20 +82,22 @@ Each step must be green (tests pass + manual smoke test) before the next.
 - [x] `CLAUDE.md`
 - [x] `PLAN.md`
 
-### Step 1 — Scaffolding
-- [ ] `requirements.txt`
-- [ ] `.env.example`, `.gitignore`, `.dockerignore`
-- [ ] `core/config.py` (Settings + `@lru_cache get_settings()`)
-- [ ] `core/logging.py` (structlog setup)
-- [ ] `main.py` stub with `GET /health` and CORS middleware
-- [ ] Verify `uvicorn main:app --reload` boots and `/health` returns 200
+### Step 1 — Scaffolding _(done)_
 
-### Step 2 — Schemas + registries
-- [ ] `api/schemas.py` (all Pydantic models from design)
-- [ ] `services/document_registry.py`
-- [ ] `services/session_memory.py`
-- [ ] `tests/conftest.py` with dummy env vars + autouse `_reset_registries`
-- [ ] `tests/test_session_memory.py` — eviction + isolation
+- [x] `requirements.txt`
+- [x] `.env.example`, `.gitignore`, `.dockerignore`
+- [x] `core/config.py` (Settings + `@lru_cache get_settings()`)
+- [x] `core/logging.py` (structlog setup)
+- [x] `main.py` stub with `GET /health` and CORS middleware
+- [x] Verify `uvicorn main:app --reload` boots and `/health` returns 200
+
+### Step 2 — Schemas + registries _(done)_
+
+- [x] `api/schemas.py` (all Pydantic models from design)
+- [x] `services/document_registry.py`
+- [x] `services/session_memory.py`
+- [x] `tests/conftest.py` with dummy env vars + autouse `_reset_registries`
+- [x] `tests/test_session_memory.py` — eviction + isolation
 
 ### Step 3 — Ingestion
 - [ ] `services/document_processor.py` (extract_text + chunk_documents)
