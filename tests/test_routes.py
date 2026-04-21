@@ -1,4 +1,5 @@
 import io
+import json
 from uuid import UUID, uuid4
 
 
@@ -138,3 +139,47 @@ def test_ask_no_doc_id_global_retrieval(client):
     })
     assert resp.status_code == 200
     assert resp.json()["answer"] == "Canned answer"
+
+
+# ── /ask/stream ──────────────────────────────────────────────────────────────
+
+def test_ask_stream_yields_sse_events(client):
+    with client.stream("POST", "/ask/stream", json={
+        "question": "What is this about?",
+        "session_id": "00000000-0000-0000-0000-000000000001",
+    }) as resp:
+        assert resp.status_code == 200
+        assert "text/event-stream" in resp.headers["content-type"]
+        raw = resp.read().decode()
+    lines = raw.strip().split("\n\n")
+    events = [json.loads(line.removeprefix("data: ")) for line in lines if line.startswith("data: ")]
+
+    types = [e["type"] for e in events]
+    assert "token" in types
+    assert "sources" in types
+    assert types[-1] == "done"
+    tokens = [e["data"] for e in events if e["type"] == "token"]
+    assert "".join(tokens) == "Canned answer"
+
+
+def test_ask_stream_processing_doc_returns_409(client):
+    upload = client.post(
+        "/upload",
+        files={"file": ("doc.pdf", io.BytesIO(b"%PDF-1.4"), "application/pdf")},
+    )
+    doc_id = upload.json()["doc_id"]
+    resp = client.post("/ask/stream", json={
+        "question": "What is this?",
+        "session_id": "00000000-0000-0000-0000-000000000001",
+        "doc_id": doc_id,
+    })
+    assert resp.status_code == 409
+
+
+def test_ask_stream_unknown_doc_returns_404(client):
+    resp = client.post("/ask/stream", json={
+        "question": "What is this?",
+        "session_id": "00000000-0000-0000-0000-000000000001",
+        "doc_id": str(uuid4()),
+    })
+    assert resp.status_code == 404

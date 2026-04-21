@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import AsyncIterator, Optional
 from uuid import UUID
 
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
@@ -109,3 +109,70 @@ def get_answer(
 
     session_memory.add_turn(session_id, question, answer_text)
     return AnswerResponse(answer=answer_text, sources=sources, session_id=session_id)
+
+
+async def astream_answer(
+    question: str,
+    session_id: UUID,
+    doc_id: Optional[UUID] = None,
+) -> AsyncIterator[dict]:
+    settings = get_settings()
+    llm = ChatGroq(
+        model=settings.GROQ_CHAT_MODEL,
+        temperature=settings.LLM_TEMPERATURE,
+        max_tokens=settings.LLM_MAX_TOKENS,
+        streaming=True,
+    )
+
+    turns = session_memory.get_turns(session_id)
+    chat_history = [
+        msg
+        for turn in turns
+        for msg in (HumanMessage(content=turn["question"]), AIMessage(content=turn["answer"]))
+    ]
+
+    if chat_history:
+        retrieval_question = (_CONDENSE_PROMPT | llm | StrOutputParser()).invoke(
+            {"input": question, "chat_history": chat_history}
+        )
+    else:
+        retrieval_question = question
+
+    retriever = _ManagerRetriever(
+        doc_id=str(doc_id) if doc_id else None,
+        k=settings.RETRIEVAL_K,
+    )
+    docs = retriever.invoke(retrieval_question)
+
+    context = "\n\n".join(
+        f"[{doc.metadata.get('filename', '')}:{doc.metadata.get('page_number', '')}]\n{doc.page_content}"
+        for doc in docs
+    )
+
+    answer_tokens: list[str] = []
+    try:
+        async for chunk in (_QA_PROMPT | llm | StrOutputParser()).astream(
+            {"input": question, "chat_history": chat_history, "context": context}
+        ):
+            answer_tokens.append(chunk)
+            yield {"type": "token", "data": chunk}
+    except Exception as exc:
+        yield {"type": "error", "data": str(exc)}
+        return
+
+    sources = [
+        SourceChunk(
+            doc_id=doc.metadata.get("doc_id", ""),
+            filename=doc.metadata.get("filename", ""),
+            page_number=doc.metadata.get("page_number"),
+            text=doc.page_content[:300],
+            score=float(doc.metadata.get("_score", 0.0)),
+        )
+        for doc in docs
+    ]
+
+    yield {"type": "sources", "data": [s.model_dump() for s in sources]}
+    yield {"type": "done"}
+
+    answer_text = "".join(answer_tokens)
+    session_memory.add_turn(session_id, question, answer_text)

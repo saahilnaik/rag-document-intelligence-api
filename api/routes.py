@@ -1,15 +1,17 @@
 import asyncio
+import json
 import logging
 from pathlib import Path
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile
+from fastapi.responses import StreamingResponse
 
 from api.schemas import AskRequest, AnswerResponse, DocumentStatus, UploadResponse
 from core.config import get_settings
 from services.document_processor import chunk_documents, extract_text
 from services.document_registry import document_registry
-from services.qa import get_answer
+from services.qa import astream_answer, get_answer
 from services.vector_store import vector_store_manager
 
 router = APIRouter()
@@ -79,14 +81,30 @@ async def delete_document(doc_id: UUID) -> None:
     document_registry.delete(doc_id)
 
 
+def _check_doc_ready(doc_id: UUID) -> None:
+    entry = document_registry.get(doc_id)
+    if not entry:
+        raise HTTPException(status_code=404, detail=f"Document {doc_id} not found.")
+    if entry.status == "processing":
+        raise HTTPException(status_code=409, detail="Document is still processing. Try again shortly.")
+    if entry.status == "failed":
+        raise HTTPException(status_code=422, detail=f"Document ingestion failed: {entry.error}")
+
+
 @router.post("/ask", response_model=AnswerResponse)
 async def ask(req: AskRequest) -> AnswerResponse:
     if req.doc_id:
-        entry = document_registry.get(req.doc_id)
-        if not entry:
-            raise HTTPException(status_code=404, detail=f"Document {req.doc_id} not found.")
-        if entry.status == "processing":
-            raise HTTPException(status_code=409, detail="Document is still processing. Try again shortly.")
-        if entry.status == "failed":
-            raise HTTPException(status_code=422, detail=f"Document ingestion failed: {entry.error}")
+        _check_doc_ready(req.doc_id)
     return await asyncio.to_thread(get_answer, req.question, req.session_id, req.doc_id)
+
+
+@router.post("/ask/stream")
+async def ask_stream(req: AskRequest) -> StreamingResponse:
+    if req.doc_id:
+        _check_doc_ready(req.doc_id)
+
+    async def event_generator():
+        async for event in astream_answer(req.question, req.session_id, req.doc_id):
+            yield f"data: {json.dumps(event)}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")

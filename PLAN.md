@@ -116,11 +116,12 @@ Each step must be green (tests pass + manual smoke test) before the next.
 - [x] `tests/test_routes.py` — `/ask` with mocked qa
 - [x] **Smoke**: upload PDF, ask question, get cited answer
 
-### Step 5 — QA (streaming)
-- [ ] `services/qa.py`: `astream_answer` yielding `token` / `sources` / `done` / `error` events
-- [ ] `api/routes.py`: `POST /ask/stream` → `StreamingResponse(media_type="text/event-stream")`
-- [ ] `tests/test_routes.py` — SSE chunks via `client.stream`
-- [ ] **Smoke**: `curl -N` sees tokens arrive live
+### Step 5 — QA (streaming) _(done)_
+
+- [x] `services/qa.py`: `astream_answer` yielding `token` / `sources` / `done` / `error` events
+- [x] `api/routes.py`: `POST /ask/stream` → `StreamingResponse(media_type="text/event-stream")`
+- [x] `tests/test_routes.py` — SSE chunks via `client.stream`
+- [x] **Smoke**: `curl -N` sees tokens arrive live
 
 ### Step 6 — Evaluation
 - [ ] `services/evaluation.py` (`score_single`, `score_batch` with Groq judge + HF embeddings)
