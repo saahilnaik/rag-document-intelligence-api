@@ -24,35 +24,41 @@ copy .env.example .env
 ## Commands
 
 **Run the FastAPI backend:**
+
 ```bash
 venv\Scripts\uvicorn main:app --reload
 # Available at http://localhost:8000 — Swagger UI at http://localhost:8000/docs
 ```
 
 **Run the Streamlit frontend (separate terminal):**
+
 ```bash
 venv\Scripts\streamlit run app.py
 # Available at http://localhost:8501
 ```
 
 **Run all tests:**
+
 ```bash
 venv\Scripts\pytest tests/ -v
 ```
 
 **Run a single test file or test:**
+
 ```bash
 venv\Scripts\pytest tests/test_routes.py -v
 venv\Scripts\pytest tests/test_routes.py::test_ask_success -v
 ```
 
 **Run the RAGAS batch evaluator:**
+
 ```bash
 venv\Scripts\python scripts/evaluate.py eval_dataset/sample_qa.jsonl
 # Prints a metrics table and writes eval_results/{timestamp}.json
 ```
 
 **Run with Docker:**
+
 ```bash
 docker compose up --build
 # API: http://localhost:8000 | Frontend: http://localhost:8501
@@ -90,6 +96,7 @@ This is a RAG (Retrieval-Augmented Generation) system. The core data flow has tw
 ### LangChain import paths (v1.x)
 
 This project uses LangChain 1.x where several modules moved packages:
+
 - `RecursiveCharacterTextSplitter` → `from langchain_text_splitters import ...`
 - `Document` → `from langchain_core.documents import ...`
 - `BaseRetriever` → `from langchain_core.retrievers import ...`
@@ -125,7 +132,7 @@ The Chroma persist directory is auto-created on first use.
 
 ### Testing
 
-Tests use `pytest` with `httpx`/`TestClient`. `conftest.py` sets dummy env vars (`GROQ_API_KEY="test"`, etc.) so `Settings` validation passes without a real `.env`, and provides three fixtures:
+Tests use `pytest` with `httpx`/`TestClient`. `pytest.ini` sets `pythonpath = .` so `core/`, `api/`, and `services/` are importable without a package install. `conftest.py` sets dummy env vars (`GROQ_API_KEY="test"`, etc.) so `Settings` validation passes without a real `.env`, and provides three fixtures:
 
 - `mock_vector_store` — replaces `vector_store_manager` with a `MagicMock` in both `services.vector_store` and `api.routes`.
 - `mock_qa` — patches both `get_answer` and `astream_answer` in `api.routes` so tests don't hit Groq.
