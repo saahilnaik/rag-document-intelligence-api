@@ -37,10 +37,14 @@ def mock_vector_store():
 
 @pytest.fixture
 def mock_qa():
-    canned = MagicMock()
-    canned.answer = "Canned answer"
-    canned.sources = []
-    canned.session_id = "00000000-0000-0000-0000-000000000001"
+    from uuid import UUID
+    from api.schemas import AnswerResponse
+
+    canned = AnswerResponse(
+        answer="Canned answer",
+        sources=[],
+        session_id=UUID("00000000-0000-0000-0000-000000000001"),
+    )
 
     async def fake_stream(*args, **kwargs):
         yield {"type": "token", "data": "Canned "}
@@ -49,7 +53,7 @@ def mock_qa():
         yield {"type": "done"}
 
     with (
-        patch("api.routes.get_answer", return_value=canned, create=True),
+        patch("api.routes.get_answer", return_value=canned),
         patch("api.routes.astream_answer", side_effect=fake_stream, create=True),
     ):
         yield

@@ -1,5 +1,5 @@
 import io
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 
 def test_health(client):
@@ -82,3 +82,59 @@ def test_delete_document_success(client):
     doc_id = upload.json()["doc_id"]
     assert client.delete(f"/documents/{doc_id}").status_code == 204
     assert client.get(f"/documents/{doc_id}").status_code == 404
+
+
+# ── /ask ────────────────────────────────────────────────────────────────────
+
+def test_ask_success(client):
+    from services.document_registry import document_registry as reg
+
+    upload = client.post(
+        "/upload",
+        files={"file": ("doc.pdf", io.BytesIO(b"%PDF-1.4"), "application/pdf")},
+    )
+    doc_id = upload.json()["doc_id"]
+    reg.mark_ready(UUID(doc_id), chunk_count=3)
+
+    resp = client.post("/ask", json={
+        "question": "What is this about?",
+        "session_id": "00000000-0000-0000-0000-000000000001",
+        "doc_id": doc_id,
+    })
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["answer"] == "Canned answer"
+    assert body["sources"] == []
+    assert "session_id" in body
+
+
+def test_ask_processing_doc_returns_409(client):
+    upload = client.post(
+        "/upload",
+        files={"file": ("doc.pdf", io.BytesIO(b"%PDF-1.4"), "application/pdf")},
+    )
+    doc_id = upload.json()["doc_id"]
+    resp = client.post("/ask", json={
+        "question": "What is this?",
+        "session_id": "00000000-0000-0000-0000-000000000001",
+        "doc_id": doc_id,
+    })
+    assert resp.status_code == 409
+
+
+def test_ask_unknown_doc_returns_404(client):
+    resp = client.post("/ask", json={
+        "question": "What is this?",
+        "session_id": "00000000-0000-0000-0000-000000000001",
+        "doc_id": str(uuid4()),
+    })
+    assert resp.status_code == 404
+
+
+def test_ask_no_doc_id_global_retrieval(client):
+    resp = client.post("/ask", json={
+        "question": "What is this about?",
+        "session_id": "00000000-0000-0000-0000-000000000001",
+    })
+    assert resp.status_code == 200
+    assert resp.json()["answer"] == "Canned answer"

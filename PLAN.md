@@ -109,11 +109,12 @@ Each step must be green (tests pass + manual smoke test) before the next.
 - [x] `tests/test_routes.py` — upload happy + invalid cases (mocked vector store)
 - [x] **Smoke**: upload real PDF → status goes `processing` → `ready`
 
-### Step 4 — QA (non-streaming)
-- [ ] `services/qa.py`: `_ManagerRetriever`, `get_answer`, LCEL chain with `ChatGroq`
-- [ ] `api/routes.py`: `POST /ask` (409 if processing, 404 if unknown)
-- [ ] `tests/test_routes.py` — `/ask` with mocked qa
-- [ ] **Smoke**: upload PDF, ask question, get cited answer
+### Step 4 — QA (non-streaming) _(done)_
+
+- [x] `services/qa.py`: `_ManagerRetriever`, `get_answer`, LCEL chain with `ChatGroq`
+- [x] `api/routes.py`: `POST /ask` (409 if processing, 404 if unknown)
+- [x] `tests/test_routes.py` — `/ask` with mocked qa
+- [x] **Smoke**: upload PDF, ask question, get cited answer
 
 ### Step 5 — QA (streaming)
 - [ ] `services/qa.py`: `astream_answer` yielding `token` / `sources` / `done` / `error` events
