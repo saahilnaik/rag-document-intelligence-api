@@ -2,6 +2,8 @@ import io
 import json
 from uuid import UUID, uuid4
 
+import pytest
+
 
 def test_health(client):
     resp = client.get("/health")
@@ -183,3 +185,28 @@ def test_ask_stream_unknown_doc_returns_404(client):
         "doc_id": str(uuid4()),
     })
     assert resp.status_code == 404
+
+
+# ── /evaluate ────────────────────────────────────────────────────────────────
+
+def test_evaluate_returns_scores(client):
+    resp = client.post("/evaluate", json={
+        "question": "What is RAG?",
+        "answer": "RAG is Retrieval-Augmented Generation.",
+        "contexts": ["RAG combines retrieval with generation."],
+        "ground_truth": "RAG stands for Retrieval-Augmented Generation.",
+    })
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["faithfulness"] == pytest.approx(0.9)
+    assert body["answer_relevancy"] == pytest.approx(0.85)
+    assert body["context_precision"] == pytest.approx(0.8)
+
+
+def test_evaluate_without_ground_truth(client):
+    resp = client.post("/evaluate", json={
+        "question": "What is RAG?",
+        "answer": "RAG is Retrieval-Augmented Generation.",
+        "contexts": ["RAG combines retrieval with generation."],
+    })
+    assert resp.status_code == 200

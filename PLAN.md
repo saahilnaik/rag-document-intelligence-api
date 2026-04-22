@@ -123,23 +123,27 @@ Each step must be green (tests pass + manual smoke test) before the next.
 - [x] `tests/test_routes.py` — SSE chunks via `client.stream`
 - [x] **Smoke**: `curl -N` sees tokens arrive live
 
-### Step 6 — Evaluation
-- [ ] `services/evaluation.py` (`score_single`, `score_batch` with Groq judge + HF embeddings)
-- [ ] `api/routes.py`: `POST /evaluate`
-- [ ] `scripts/evaluate.py` CLI (reads JSONL, runs real pipeline, prints table, writes JSON)
-- [ ] `eval_dataset/sample.pdf` + `eval_dataset/sample_qa.jsonl` (~5 pairs)
-- [ ] `tests/test_evaluation.py` — `score_single` shape with mocked RAGAS
+### Step 6 — Evaluation _(done)_
+
+- [x] `services/evaluation.py` (`score_single`, `score_batch` with Groq judge + HF embeddings)
+- [x] `api/routes.py`: `POST /evaluate`
+- [x] `scripts/evaluate.py` CLI (reads JSONL, runs real pipeline, prints table, writes JSON)
+- [x] `eval_dataset/sample.pdf` + `eval_dataset/sample_qa.jsonl` (~5 pairs)
+- [x] `tests/test_evaluation.py` — `score_single` shape with mocked RAGAS
 
 ### Step 7 — Streamlit frontend
+
 - [ ] `app.py`: sidebar uploader + doc list polling, main chat with streaming token render, source expander
 - [ ] **Smoke**: full upload + streaming chat flow in browser
 
 ### Step 8 — Docker
+
 - [ ] `Dockerfile` (python:3.11-slim, pre-download BGE in build step)
 - [ ] `docker-compose.yml` (api + frontend services, named volume for `/app/data`)
 - [ ] **Smoke**: cold `docker compose up --build`, hit both URLs, restart and confirm data persists
 
 ### Step 9 — README polish
+
 - [ ] Problem statement
 - [ ] Mermaid architecture diagram
 - [ ] Quickstart (`docker compose up`)

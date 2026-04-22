@@ -60,7 +60,14 @@ def mock_qa():
 
 
 @pytest.fixture
-def client(mock_vector_store, mock_qa):
+def mock_evaluate():
+    canned = {"faithfulness": 0.9, "answer_relevancy": 0.85, "context_precision": 0.8}
+    with patch("api.routes.score_single", return_value=canned):
+        yield canned
+
+
+@pytest.fixture
+def client(mock_vector_store, mock_qa, mock_evaluate):
     from main import app
     from fastapi.testclient import TestClient
 

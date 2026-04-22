@@ -7,10 +7,11 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 
-from api.schemas import AskRequest, AnswerResponse, DocumentStatus, UploadResponse
+from api.schemas import AskRequest, AnswerResponse, DocumentStatus, EvaluateRequest, EvaluateResponse, UploadResponse
 from core.config import get_settings
 from services.document_processor import chunk_documents, extract_text
 from services.document_registry import document_registry
+from services.evaluation import score_single
 from services.qa import astream_answer, get_answer
 from services.vector_store import vector_store_manager
 
@@ -108,3 +109,15 @@ async def ask_stream(req: AskRequest) -> StreamingResponse:
             yield f"data: {json.dumps(event)}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+@router.post("/evaluate", response_model=EvaluateResponse)
+async def evaluate_answer(req: EvaluateRequest) -> EvaluateResponse:
+    scores = await asyncio.to_thread(
+        score_single,
+        req.question,
+        req.answer,
+        req.contexts,
+        req.ground_truth,
+    )
+    return EvaluateResponse(**scores)
