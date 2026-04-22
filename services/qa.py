@@ -61,6 +61,7 @@ def get_answer(
 ) -> AnswerResponse:
     settings = get_settings()
     llm = ChatGroq(
+        api_key=settings.GROQ_API_KEY,
         model=settings.GROQ_CHAT_MODEL,
         temperature=settings.LLM_TEMPERATURE,
         max_tokens=settings.LLM_MAX_TOKENS,
@@ -118,6 +119,7 @@ async def astream_answer(
 ) -> AsyncIterator[dict]:
     settings = get_settings()
     llm = ChatGroq(
+        api_key=settings.GROQ_API_KEY,
         model=settings.GROQ_CHAT_MODEL,
         temperature=settings.LLM_TEMPERATURE,
         max_tokens=settings.LLM_MAX_TOKENS,
