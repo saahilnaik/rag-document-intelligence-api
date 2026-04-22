@@ -131,10 +131,10 @@ Each step must be green (tests pass + manual smoke test) before the next.
 - [x] `eval_dataset/sample.pdf` + `eval_dataset/sample_qa.jsonl` (~5 pairs)
 - [x] `tests/test_evaluation.py` — `score_single` shape with mocked RAGAS
 
-### Step 7 — Streamlit frontend
+### Step 7 — Streamlit frontend _(done)_
 
-- [ ] `app.py`: sidebar uploader + doc list polling, main chat with streaming token render, source expander
-- [ ] **Smoke**: full upload + streaming chat flow in browser
+- [x] `app.py`: sidebar uploader + doc list polling, main chat with streaming token render, source expander
+- [x] **Smoke**: full upload + streaming chat flow in browser
 
 ### Step 8 — Docker
 
