@@ -71,26 +71,30 @@ export async function streamAnswer(
   const decoder = new TextDecoder()
   let buffer = ''
 
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
 
-    buffer += decoder.decode(value, { stream: true })
-    const parts = buffer.split('\n\n')
-    buffer = parts.pop() ?? ''
+      buffer += decoder.decode(value, { stream: true })
+      const parts = buffer.split('\n\n')
+      buffer = parts.pop() ?? ''
 
-    for (const part of parts) {
-      const line = part.trim()
-      if (!line.startsWith('data: ')) continue
-      try {
-        const event = JSON.parse(line.slice(6)) as { type: string; data: unknown }
-        if (event.type === 'token') onToken(event.data as string)
-        else if (event.type === 'sources') onSources(event.data as SourceChunk[])
-        else if (event.type === 'done') onDone()
-        else if (event.type === 'error') onError(event.data as string)
-      } catch {
-        // malformed SSE line — skip
+      for (const part of parts) {
+        const line = part.trim()
+        if (!line.startsWith('data: ')) continue
+        try {
+          const event = JSON.parse(line.slice(6)) as { type: string; data: unknown }
+          if (event.type === 'token' && typeof event.data === 'string') onToken(event.data)
+          else if (event.type === 'sources' && Array.isArray(event.data)) onSources(event.data as SourceChunk[])
+          else if (event.type === 'done') onDone()
+          else if (event.type === 'error' && typeof event.data === 'string') onError(event.data)
+        } catch {
+          // malformed SSE line — skip
+        }
       }
     }
+  } finally {
+    reader.releaseLock()
   }
 }

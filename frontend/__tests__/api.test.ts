@@ -103,7 +103,7 @@ describe('streamAnswer', () => {
       body: makeSSEStream([
         { type: 'token', data: 'Hello' },
         { type: 'token', data: ' world' },
-        { type: 'done', data: null },
+        { type: 'done' },
       ]),
     })
 
@@ -127,7 +127,7 @@ describe('streamAnswer', () => {
       status: 200,
       body: makeSSEStream([
         { type: 'sources', data: sources },
-        { type: 'done', data: null },
+        { type: 'done' },
       ]),
     })
 
@@ -160,5 +160,12 @@ describe('streamAnswer', () => {
     const onError = vi.fn()
     await streamAnswer({ question: 'q', session_id: 'sid' }, vi.fn(), vi.fn(), vi.fn(), onError)
     expect(onError).toHaveBeenCalledWith('API error 409')
+  })
+
+  it('calls onError when response body is null', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, body: null })
+    const onError = vi.fn()
+    await streamAnswer({ question: 'q', session_id: 'sid' }, vi.fn(), vi.fn(), vi.fn(), onError)
+    expect(onError).toHaveBeenCalledWith('No response body from server')
   })
 })
