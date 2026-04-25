@@ -23,6 +23,6 @@ COPY . .
 
 RUN mkdir -p /app/data/uploads /app/data/chroma
 
-EXPOSE 8000 8501
+EXPOSE 8000
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

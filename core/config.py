@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     CHUNK_OVERLAP: int = 200
     MAX_CONVERSATION_TURNS: int = 5
 
-    CORS_ORIGINS: list[str] = ["http://localhost:8501"]
+    CORS_ORIGINS: list[str] = ["http://localhost:3000"]
 
 
 @lru_cache
