@@ -209,3 +209,36 @@ describe('ChatInput', () => {
     expect(screen.getByRole('button', { name: /send/i })).toBeDisabled()
   })
 })
+
+describe('ChatWindow', () => {
+  it('renders empty state when no messages', async () => {
+    const { ChatWindow } = await import('@/components/ChatWindow')
+    render(<ChatWindow />)
+    expect(screen.getByText(/upload a document/i)).toBeInTheDocument()
+  })
+
+  it('renders user and assistant messages', async () => {
+    useAppStore.setState({
+      ...useAppStore.getState(),
+      messages: [
+        { id: '1', role: 'user', content: 'What is RAG?' },
+        { id: '2', role: 'assistant', content: 'RAG stands for Retrieval-Augmented Generation.' },
+      ],
+    })
+    const { ChatWindow } = await import('@/components/ChatWindow')
+    render(<ChatWindow />)
+    expect(screen.getByText('What is RAG?')).toBeInTheDocument()
+    expect(screen.getByText(/Retrieval-Augmented Generation/)).toBeInTheDocument()
+  })
+
+  it('shows streaming cursor when isStreaming is true', async () => {
+    useAppStore.setState({
+      ...useAppStore.getState(),
+      isStreaming: true,
+      messages: [{ id: '1', role: 'assistant', content: 'Partial answer' }],
+    })
+    const { ChatWindow } = await import('@/components/ChatWindow')
+    render(<ChatWindow />)
+    expect(screen.getByText(/▌/)).toBeInTheDocument()
+  })
+})
