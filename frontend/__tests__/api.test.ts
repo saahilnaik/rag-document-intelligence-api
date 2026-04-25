@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { fetchDocuments, uploadDocument, deleteDocument } from '@/lib/api'
+import { fetchDocuments, uploadDocument, deleteDocument, streamAnswer } from '@/lib/api'
 import type { DocumentStatus } from '@/types'
 
 const API = 'http://localhost:8000'
@@ -80,5 +80,85 @@ describe('deleteDocument', () => {
   it('does not throw on failure (silent delete)', async () => {
     global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 404 })
     await expect(deleteDocument('missing')).resolves.toBeUndefined()
+  })
+})
+
+function makeSSEStream(events: unknown[]): ReadableStream<Uint8Array> {
+  const encoder = new TextEncoder()
+  return new ReadableStream({
+    start(controller) {
+      for (const event of events) {
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`))
+      }
+      controller.close()
+    },
+  })
+}
+
+describe('streamAnswer', () => {
+  it('calls onToken for each token event', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: makeSSEStream([
+        { type: 'token', data: 'Hello' },
+        { type: 'token', data: ' world' },
+        { type: 'done', data: null },
+      ]),
+    })
+
+    const tokens: string[] = []
+    const onDone = vi.fn()
+    await streamAnswer(
+      { question: 'q', session_id: 'sid' },
+      (t) => tokens.push(t),
+      vi.fn(),
+      onDone,
+      vi.fn()
+    )
+    expect(tokens).toEqual(['Hello', ' world'])
+    expect(onDone).toHaveBeenCalledOnce()
+  })
+
+  it('calls onSources with source chunks', async () => {
+    const sources = [{ doc_id: 'd1', filename: 'a.pdf', text: 'chunk', score: 0.9 }]
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: makeSSEStream([
+        { type: 'sources', data: sources },
+        { type: 'done', data: null },
+      ]),
+    })
+
+    const onSources = vi.fn()
+    await streamAnswer({ question: 'q', session_id: 'sid' }, vi.fn(), onSources, vi.fn(), vi.fn())
+    expect(onSources).toHaveBeenCalledWith(sources)
+  })
+
+  it('calls onError on SSE error event', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      body: makeSSEStream([{ type: 'error', data: 'LLM timeout' }]),
+    })
+
+    const onError = vi.fn()
+    await streamAnswer({ question: 'q', session_id: 'sid' }, vi.fn(), vi.fn(), vi.fn(), onError)
+    expect(onError).toHaveBeenCalledWith('LLM timeout')
+  })
+
+  it('calls onError when fetch fails', async () => {
+    global.fetch = vi.fn().mockRejectedValue(new Error('connection refused'))
+    const onError = vi.fn()
+    await streamAnswer({ question: 'q', session_id: 'sid' }, vi.fn(), vi.fn(), vi.fn(), onError)
+    expect(onError).toHaveBeenCalledWith(expect.stringContaining('reach API'))
+  })
+
+  it('calls onError on non-ok HTTP response', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 409 })
+    const onError = vi.fn()
+    await streamAnswer({ question: 'q', session_id: 'sid' }, vi.fn(), vi.fn(), vi.fn(), onError)
+    expect(onError).toHaveBeenCalledWith('API error 409')
   })
 })

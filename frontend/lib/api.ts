@@ -45,6 +45,52 @@ export async function streamAnswer(
   onDone: () => void,
   onError: (error: string) => void
 ): Promise<void> {
-  // Implemented in Task 7
-  void payload; void onToken; void onSources; void onDone; void onError
+  let response: Response
+  try {
+    response = await fetch(`${API_URL}/ask/stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+  } catch {
+    onError('Cannot reach API. Is the server running?')
+    return
+  }
+
+  if (!response.ok) {
+    onError(`API error ${response.status}`)
+    return
+  }
+
+  if (!response.body) {
+    onError('No response body from server')
+    return
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+
+    buffer += decoder.decode(value, { stream: true })
+    const parts = buffer.split('\n\n')
+    buffer = parts.pop() ?? ''
+
+    for (const part of parts) {
+      const line = part.trim()
+      if (!line.startsWith('data: ')) continue
+      try {
+        const event = JSON.parse(line.slice(6)) as { type: string; data: unknown }
+        if (event.type === 'token') onToken(event.data as string)
+        else if (event.type === 'sources') onSources(event.data as SourceChunk[])
+        else if (event.type === 'done') onDone()
+        else if (event.type === 'error') onError(event.data as string)
+      } catch {
+        // malformed SSE line — skip
+      }
+    }
+  }
 }
