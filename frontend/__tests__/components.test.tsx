@@ -167,3 +167,45 @@ describe('Sidebar', () => {
     expect(screen.getByText(/clear chat/i)).toBeInTheDocument()
   })
 })
+
+describe('ChatInput', () => {
+  it('renders a text input and send button', async () => {
+    const { ChatInput } = await import('@/components/ChatInput')
+    render(<ChatInput onSend={vi.fn()} />)
+    expect(screen.getByPlaceholderText(/ask a question/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /send/i })).toBeInTheDocument()
+  })
+
+  it('calls onSend with trimmed input on button click', async () => {
+    const { ChatInput } = await import('@/components/ChatInput')
+    const onSend = vi.fn()
+    render(<ChatInput onSend={onSend} />)
+    const input = screen.getByPlaceholderText(/ask a question/i)
+    fireEvent.change(input, { target: { value: '  hello  ' } })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    expect(onSend).toHaveBeenCalledWith('hello')
+  })
+
+  it('clears input after sending', async () => {
+    const { ChatInput } = await import('@/components/ChatInput')
+    render(<ChatInput onSend={vi.fn()} />)
+    const input = screen.getByPlaceholderText(/ask a question/i) as HTMLInputElement
+    fireEvent.change(input, { target: { value: 'hello' } })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    expect(input.value).toBe('')
+  })
+
+  it('does not call onSend for empty input', async () => {
+    const { ChatInput } = await import('@/components/ChatInput')
+    const onSend = vi.fn()
+    render(<ChatInput onSend={onSend} />)
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    expect(onSend).not.toHaveBeenCalled()
+  })
+
+  it('disables the button when disabled prop is true', async () => {
+    const { ChatInput } = await import('@/components/ChatInput')
+    render(<ChatInput onSend={vi.fn()} disabled />)
+    expect(screen.getByRole('button', { name: /send/i })).toBeDisabled()
+  })
+})
