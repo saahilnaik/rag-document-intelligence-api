@@ -93,3 +93,37 @@ describe('DocumentCard', () => {
     expect(screen.getByText(/processing/i)).toBeInTheDocument()
   })
 })
+
+describe('SourcesExpander', () => {
+  const sources: import('@/types').SourceChunk[] = [
+    { doc_id: 'd1', filename: 'report.pdf', page_number: 3, text: 'some text here', score: 0.92 },
+    { doc_id: 'd2', filename: 'notes.txt', text: 'other text', score: 0.85 },
+  ]
+
+  it('renders a toggle button with source count', async () => {
+    const { SourcesExpander } = await import('@/components/SourcesExpander')
+    render(<SourcesExpander sources={sources} />)
+    expect(screen.getByText(/2 sources/i)).toBeInTheDocument()
+  })
+
+  it('hides source details by default', async () => {
+    const { SourcesExpander } = await import('@/components/SourcesExpander')
+    render(<SourcesExpander sources={sources} />)
+    expect(screen.queryByText('some text here')).not.toBeInTheDocument()
+  })
+
+  it('shows source details after clicking toggle', async () => {
+    const { SourcesExpander } = await import('@/components/SourcesExpander')
+    render(<SourcesExpander sources={sources} />)
+    fireEvent.click(screen.getByText(/2 sources/i))
+    expect(screen.getByText('some text here')).toBeInTheDocument()
+    expect(screen.getByText(/report\.pdf/)).toBeInTheDocument()
+  })
+
+  it('shows singular label for one source', async () => {
+    const { SourcesExpander } = await import('@/components/SourcesExpander')
+    render(<SourcesExpander sources={[sources[0]]} />)
+    expect(screen.getByText(/1 source/i)).toBeInTheDocument()
+    expect(screen.queryByText(/1 sources/i)).not.toBeInTheDocument()
+  })
+})
