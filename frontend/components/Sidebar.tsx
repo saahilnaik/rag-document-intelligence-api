@@ -62,8 +62,8 @@ export function Sidebar() {
   const readyDocs = documents.filter((d) => d.status === 'ready')
 
   return (
-    <aside className="w-64 shrink-0 flex flex-col h-full border-r border-slate-700 dark:border-slate-700 border-gray-200 bg-slate-900 dark:bg-slate-900 bg-white">
-      <div className="p-4 border-b border-slate-700 dark:border-slate-700 border-gray-200">
+    <aside className="w-64 shrink-0 flex flex-col h-full border-r border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+      <div className="p-4 border-b border-gray-200 dark:border-slate-700">
         <h1 className="font-semibold text-sm tracking-wide uppercase text-slate-400 dark:text-slate-400 text-gray-500">
           Documents
         </h1>
@@ -71,7 +71,7 @@ export function Sidebar() {
 
       {/* Upload zone */}
       <div className="p-3">
-        <label className="block cursor-pointer border-2 border-dashed border-slate-600 dark:border-slate-600 border-gray-300 rounded-lg p-4 text-center text-sm text-slate-400 dark:text-slate-400 text-gray-500 hover:border-blue-500 hover:text-blue-400 transition-colors">
+        <label className="block cursor-pointer border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-lg p-4 text-center text-sm text-slate-400 dark:text-slate-400 text-gray-500 hover:border-blue-500 hover:text-blue-400 transition-colors">
           <input
             type="file"
             accept=".pdf,.txt,.docx,.md"
@@ -95,14 +95,14 @@ export function Sidebar() {
       </div>
 
       {/* Scope selector */}
-      <div className="p-3 border-t border-slate-700 dark:border-slate-700 border-gray-200">
+      <div className="p-3 border-t border-gray-200 dark:border-slate-700">
         <label className="block text-xs text-slate-400 dark:text-slate-400 text-gray-500 mb-1">
           Query scope
         </label>
         <select
           value={selectedDocId ?? ''}
           onChange={(e) => setSelectedDocId(e.target.value || null)}
-          className="w-full text-sm rounded-lg px-2 py-1.5 bg-slate-800 dark:bg-slate-800 bg-gray-100 border border-slate-600 dark:border-slate-600 border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full text-sm rounded-lg px-2 py-1.5 bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
         >
           <option value="">All documents</option>
           {readyDocs.map((d) => (
@@ -114,7 +114,7 @@ export function Sidebar() {
       </div>
 
       {/* Footer actions */}
-      <div className="p-3 border-t border-slate-700 dark:border-slate-700 border-gray-200 flex items-center justify-between">
+      <div className="p-3 border-t border-gray-200 dark:border-slate-700 flex items-center justify-between">
         <button
           onClick={clearChat}
           className="text-xs text-slate-400 hover:text-slate-200 dark:hover:text-slate-200 hover:text-gray-700 transition-colors"

@@ -15,7 +15,7 @@ interface Props {
 
 export function DocumentCard({ doc, onDelete }: Props) {
   return (
-    <div className="flex items-center justify-between gap-2 py-1.5 px-2 rounded hover:bg-slate-800 dark:hover:bg-slate-800 hover:bg-gray-100 group">
+    <div className="flex items-center justify-between gap-2 py-1.5 px-2 rounded hover:bg-gray-100 dark:hover:bg-slate-800 group">
       <div className="flex items-center gap-2 min-w-0">
         <span title={doc.status}>{STATUS_BADGE[doc.status]}</span>
         <span className="text-sm truncate">{doc.filename}</span>

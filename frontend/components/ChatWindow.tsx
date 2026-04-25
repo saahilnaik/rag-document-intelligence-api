@@ -36,7 +36,7 @@ export function ChatWindow() {
               className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
                 msg.role === 'user'
                   ? 'bg-blue-600 text-white'
-                  : 'bg-slate-700 dark:bg-slate-700 bg-gray-200'
+                  : 'bg-gray-200 dark:bg-slate-700'
               }`}
             >
               {msg.role === 'user' ? 'U' : 'AI'}

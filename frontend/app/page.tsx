@@ -12,7 +12,7 @@ export default function Page() {
     <main className="flex h-screen overflow-hidden">
       <Sidebar />
       <div className="flex flex-col flex-1 min-w-0">
-        <header className="px-6 py-3 border-b border-slate-700 dark:border-slate-700 border-gray-200 shrink-0">
+        <header className="px-6 py-3 border-b border-gray-200 dark:border-slate-700 shrink-0">
           <h2 className="text-sm font-medium text-slate-300 dark:text-slate-300 text-gray-700">
             🔍 RAG Document Intelligence
           </h2>

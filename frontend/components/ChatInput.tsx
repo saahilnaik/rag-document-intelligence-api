@@ -25,7 +25,7 @@ export function ChatInput({ onSend, disabled = false }: Props) {
   }
 
   return (
-    <div className="p-4 border-t border-slate-700 dark:border-slate-700 border-gray-200 bg-slate-900 dark:bg-slate-900 bg-white">
+    <div className="p-4 border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
       <div className="flex gap-2">
         <input
           type="text"
@@ -34,7 +34,7 @@ export function ChatInput({ onSend, disabled = false }: Props) {
           onKeyDown={handleKeyDown}
           placeholder="Ask a question about your documents…"
           disabled={disabled}
-          className="flex-1 rounded-lg px-4 py-2.5 text-sm bg-slate-800 dark:bg-slate-800 bg-gray-100 border border-slate-600 dark:border-slate-600 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+          className="flex-1 rounded-lg px-4 py-2.5 text-sm bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
         />
         <button
           onClick={handleSend}

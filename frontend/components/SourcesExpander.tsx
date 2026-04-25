@@ -26,7 +26,7 @@ export function SourcesExpander({ sources }: Props) {
           {sources.map((src, i) => (
             <div
               key={i}
-              className="p-3 rounded-lg bg-slate-800 dark:bg-slate-800 bg-gray-100 text-sm"
+              className="p-3 rounded-lg bg-gray-100 dark:bg-slate-800 text-sm"
             >
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-medium">{src.filename}</span>
