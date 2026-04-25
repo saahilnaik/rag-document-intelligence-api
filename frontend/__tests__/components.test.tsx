@@ -127,3 +127,43 @@ describe('SourcesExpander', () => {
     expect(screen.queryByText(/1 sources/i)).not.toBeInTheDocument()
   })
 })
+
+describe('Sidebar', () => {
+  beforeEach(() => {
+    vi.mock('@/lib/api', () => ({
+      fetchDocuments: vi.fn().mockResolvedValue([]),
+      uploadDocument: vi.fn(),
+      deleteDocument: vi.fn(),
+      streamAnswer: vi.fn(),
+    }))
+    useAppStore.setState({
+      messages: [],
+      sessionId: 'sid',
+      isStreaming: false,
+      documents: [
+        { doc_id: 'd1', filename: 'report.pdf', status: 'ready', created_at: '', chunk_count: 5 },
+      ],
+      selectedDocId: null,
+      isPolling: false,
+      theme: 'dark',
+    })
+  })
+
+  it('renders the document list from the store', async () => {
+    const { Sidebar } = await import('@/components/Sidebar')
+    render(<Sidebar />)
+    expect(screen.getAllByText(/report\.pdf/)[0]).toBeInTheDocument()
+  })
+
+  it('renders the scope selector with all-docs option', async () => {
+    const { Sidebar } = await import('@/components/Sidebar')
+    render(<Sidebar />)
+    expect(screen.getByText(/All documents/i)).toBeInTheDocument()
+  })
+
+  it('renders a clear chat button', async () => {
+    const { Sidebar } = await import('@/components/Sidebar')
+    render(<Sidebar />)
+    expect(screen.getByText(/clear chat/i)).toBeInTheDocument()
+  })
+})
