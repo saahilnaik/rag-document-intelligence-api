@@ -27,11 +27,25 @@ def chunk_documents(docs: list[Document], doc_id: str, filename: str) -> list[Do
         doc.metadata["doc_id"] = str(doc_id)
         doc.metadata["filename"] = filename
         doc.metadata["file_type"] = file_type
+        
+        # Handle page_number: use 'page' key if available (PDFs), otherwise default to 1
         if "page" in doc.metadata:
             doc.metadata["page_number"] = doc.metadata.pop("page") + 1
+        else:
+            # Ensure page_number is always set for non-PDF documents or PDFs without page metadata
+            doc.metadata["page_number"] = doc.metadata.get("page_number", 1)
 
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=settings.CHUNK_SIZE,
         chunk_overlap=settings.CHUNK_OVERLAP,
     )
-    return splitter.split_documents(docs)
+    chunks = splitter.split_documents(docs)
+    
+    # Ensure all chunks have required metadata fields
+    for chunk in chunks:
+        chunk.metadata.setdefault("doc_id", str(doc_id))
+        chunk.metadata.setdefault("filename", filename)
+        chunk.metadata.setdefault("file_type", file_type)
+        chunk.metadata.setdefault("page_number", 1)
+    
+    return chunks

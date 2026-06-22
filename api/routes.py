@@ -21,12 +21,16 @@ logger = logging.getLogger(__name__)
 
 def _ingest_document(doc_id: UUID, file_path: Path, file_type: str, filename: str) -> None:
     try:
+        logger.info(f"Starting ingestion for document {doc_id} ({filename})")
         docs = extract_text(str(file_path), file_type)
+        logger.info(f"Extracted {len(docs)} documents from {filename}")
         chunks = chunk_documents(docs, str(doc_id), filename)
+        logger.info(f"Created {len(chunks)} chunks from {filename}")
         vector_store_manager.store_chunks(chunks)
+        logger.info(f"Successfully stored {len(chunks)} chunks for document {doc_id}")
         document_registry.mark_ready(doc_id, len(chunks))
     except Exception as exc:
-        logger.error("Ingestion failed for %s: %s", doc_id, exc)
+        logger.error(f"Ingestion failed for {doc_id} ({filename}): {exc}", exc_info=True)
         document_registry.mark_failed(doc_id, str(exc))
 
 

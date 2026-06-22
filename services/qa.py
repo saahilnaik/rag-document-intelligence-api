@@ -1,3 +1,4 @@
+import logging
 from typing import AsyncIterator, Optional
 from uuid import UUID
 
@@ -13,6 +14,8 @@ from api.schemas import AnswerResponse, SourceChunk
 from core.config import get_settings
 from services.session_memory import session_memory
 from services.vector_store import vector_store_manager
+
+logger = logging.getLogger(__name__)
 
 _CONDENSE_PROMPT = ChatPromptTemplate.from_messages([
     (
@@ -46,11 +49,13 @@ class _ManagerRetriever(BaseRetriever):
         *,
         run_manager: CallbackManagerForRetrieverRun,
     ) -> list[Document]:
+        logger.debug(f"Retrieving {self.k} documents for query: {query}, doc_id: {self.doc_id}")
         results = vector_store_manager.retrieve(query, k=self.k, doc_id=self.doc_id)
         docs = []
         for doc, score in results:
             doc.metadata["_score"] = score
             docs.append(doc)
+        logger.info(f"Retrieved {len(docs)} documents, doc_id={self.doc_id}")
         return docs
 
 
@@ -59,6 +64,7 @@ def get_answer(
     session_id: UUID,
     doc_id: Optional[UUID] = None,
 ) -> AnswerResponse:
+    logger.info(f"Processing question for session {session_id}, doc_id={doc_id}: {question[:100]}")
     settings = get_settings()
     llm = ChatGroq(
         api_key=settings.GROQ_API_KEY,
@@ -79,6 +85,7 @@ def get_answer(
         retrieval_question = (_CONDENSE_PROMPT | llm | StrOutputParser()).invoke(
             {"input": question, "chat_history": chat_history}
         )
+        logger.debug(f"Condensed question: {retrieval_question}")
     else:
         retrieval_question = question
 
@@ -87,6 +94,7 @@ def get_answer(
         k=settings.RETRIEVAL_K,
     )
     docs = retriever.invoke(retrieval_question)
+    logger.info(f"Retrieved {len(docs)} documents for answering")
 
     context = "\n\n".join(
         f"[{doc.metadata.get('filename', '')}:{doc.metadata.get('page_number', '')}]\n{doc.page_content}"
@@ -108,6 +116,7 @@ def get_answer(
         for doc in docs
     ]
 
+    logger.info(f"Generated answer with {len(sources)} sources")
     session_memory.add_turn(session_id, question, answer_text)
     return AnswerResponse(answer=answer_text, sources=sources, session_id=session_id)
 
@@ -117,6 +126,7 @@ async def astream_answer(
     session_id: UUID,
     doc_id: Optional[UUID] = None,
 ) -> AsyncIterator[dict]:
+    logger.info(f"Processing streaming question for session {session_id}, doc_id={doc_id}: {question[:100]}")
     settings = get_settings()
     llm = ChatGroq(
         api_key=settings.GROQ_API_KEY,
@@ -137,6 +147,7 @@ async def astream_answer(
         retrieval_question = (_CONDENSE_PROMPT | llm | StrOutputParser()).invoke(
             {"input": question, "chat_history": chat_history}
         )
+        logger.debug(f"Condensed question: {retrieval_question}")
     else:
         retrieval_question = question
 
@@ -145,6 +156,7 @@ async def astream_answer(
         k=settings.RETRIEVAL_K,
     )
     docs = retriever.invoke(retrieval_question)
+    logger.info(f"Retrieved {len(docs)} documents for streaming answer")
 
     context = "\n\n".join(
         f"[{doc.metadata.get('filename', '')}:{doc.metadata.get('page_number', '')}]\n{doc.page_content}"
@@ -159,6 +171,7 @@ async def astream_answer(
             answer_tokens.append(chunk)
             yield {"type": "token", "data": chunk}
     except Exception as exc:
+        logger.error(f"Error streaming answer: {exc}", exc_info=True)
         yield {"type": "error", "data": str(exc)}
         return
 
@@ -173,6 +186,7 @@ async def astream_answer(
         for doc in docs
     ]
 
+    logger.info(f"Generated streaming answer with {len(sources)} sources")
     yield {"type": "sources", "data": [s.model_dump() for s in sources]}
     yield {"type": "done"}
 
